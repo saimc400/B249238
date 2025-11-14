@@ -476,6 +476,9 @@ consecutive_data &lt;- files %&gt;%
 ## 
 ## ℹ Use `spec()` to retrieve the full column specification for this data.
 ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+<div id="graph" class="section level2">
+<h2>Graph</h2>
 <pre class="r"><code>salbutamol_prescription_12months &lt;- consecutive_data %&gt;% 
   clean_names() %&gt;% 
   full_join(HB_lookup, by = c(&quot;hbt&quot; = &quot;hb&quot;)) %&gt;% 
