@@ -36,7 +36,6 @@ HB_lookup <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-
 
 
 
-These graphs show the variations in monthly prescribing of salbutamol throughout 2024 for each of the Health boards in Scotland:
 
 ```{r pressure, include=TRUE}
 
@@ -63,8 +62,11 @@ line_chart
 ```
 
 
+These graphs above show the variations in monthly prescribing of salbutamol throughout 2024 for each of the Health boards in Scotland
+
 
 For the future, I plan to produce similar graphs for other beta-blockers and maybe also graphs for all beta-blockers combined. It might also be useful for me to include a summary table of prescribing of beta-blockers across health boards.
 
 Regarding seasonal changes, I could divide the 12 months into 4 seasons (3 months data combined for total data for each season) but I need to investigate the best way to present the data across seasons.
+
 If I end up having too many graphs, I might decide to only have graphs for data regarding all beta-blockers combined rather than specific beta-blockers like salbutamol.
