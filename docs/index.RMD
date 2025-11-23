@@ -1,54 +1,127 @@
 ---
-title: "Prescribing of Beta-blockers: Variations Across Seasons and Health Boards"
+title: 'Prescribing of Salbutamol: Variations Across Seasons and Health Boards'
 author: "B249238"
-output: html_document
-date: "2025-10-31"
+output:
+  html_document:
+    theme: cerulean
+    toc: true
+    toc_float: true
+    code_folding: hide
+    number_sections: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
 
 library(tidyverse)
 library(janitor) # cleaning data
 library(gt) # tables
-library(here) # directory structure (will be useful later)
+library(here) # directory structure
+library(sf)
+library(plotly)
 
 ```
 
-## Introduction
+# Introduction
 
-The aim of this report is to investigate the seasonal changes and changes across NHS Scotland health boards regarding monthly prescribing of beta-blockers.
+Salbutamol is a short-acting beta-agonist (SABA) most commonly prescribed in the treatment of asthma. 
 
-First we load in data files for the prescriptions in each month of 2024. We also load in data for the Health Boards:
+The aim of this report is to investigate the trends regarding prescribing of salbutamol in Scotland in the year 2024. With a focus on 
+
+It is imortant to consider the influence of these factors on the prescribing of salbutamol
+
+Across the NHS Health Boards, we would expect 
+
+First we load in data files for the prescriptions in each month of 2024. We also load in data for the NHS Health Boards:
 
 ```{r, include=TRUE}
 
-files <- list.files(here("data", "consecutive_data_2024"), pattern = "csv")
+data_jan_jun_2024 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/f0df380b-3f9b-4536-bb87-569e189b727a/download/hb_pitc2024_01_06-1.csv") %>% 
+  clean_names()
 
-consecutive_data <- files %>% 
-  map_dfr(~read_csv(here("data", "consecutive_data_2024", .)) %>% 
-            mutate(DMDCode = as.character(DMDCode)))
+data_jul_dec_2024 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/f3b9f2e2-66c0-4310-9b8e-734781d2ed0a/download/hb_pitc2024_07_12-1.csv") %>% 
+  clean_names()
 
 HB_lookup <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-b534-d6e17229cc7b/resource/652ff726-e676-4a20-abda-435b98dd7bdc/download/hb14_hb19.csv") %>% 
   clean_names()
 
-```
-
-
-## Graph
-
-
-```{r pressure, include=TRUE}
-
-salbutamol_prescription_12months <- consecutive_data %>% 
+combined_data_2024 <- bind_rows(data_jan_jun_2024, data_jul_dec_2024) %>% 
   clean_names() %>% 
   full_join(HB_lookup, by = c("hbt" = "hb")) %>% 
   select(hb_name, hbt:paid_date_month) %>% 
-  mutate(paid_date_month = parse_date_time(paid_date_month, "ym")) %>% 
-  filter(str_detect(bnf_item_description, "SALBUTAMOL")) %>% 
-  group_by(hb_name, paid_date_month) %>% 
-  summarise(paid_quantity = sum(paid_quantity)) %>% 
   filter(!is.na(hb_name))
+
+NHS_healthboards <- st_read(here("data", "Week6_NHS_HealthBoards_2019.shp"))
+
+population_data <- read_csv(here( "data", "UV102a_age_health_board_census.csv"), skip = 10) %>% 
+  # Rename the last column to avoid the messy name in column 6
+  # and to match column names with the prescription dataset
+  rename(Spare = "...6",
+         hb_name = "Health Board Area 2019",
+         hb_population = Count) %>% 
+  # filter the data so that we get the population of the entire health board
+  filter(Age == "All people" & Sex == "All people") %>% 
+  # select only the relevant columns
+  select(hb_name, hb_population) %>% 
+  # change health board names so they match the prescription data
+  mutate(hb_name = paste("NHS", hb_name))
+
+```
+
+
+```{r}
+
+salbutamol_drugs <- c("SALBUTAMOL", "AIROMIR", "ASMALAL", "SALAMOL", "SALBULIN", "VENTOLIN")
+
+salbutamol_data <- combined_data_2024 %>% 
+  filter(str_detect(bnf_item_description, paste(salbutamol_drugs, collapse = "|")))
+
+```
+
+
+# Results
+## Summary Table
+
+```{r}
+
+salbutamol_data_table <- population_data %>%
+  full_join(salbutamol_data, 
+            by = join_by(hb_name)) %>%
+  group_by(hb_name, hb_population) %>% 
+  summarise(
+    number_of_paid_items = sum(number_of_paid_items), 
+    paid_quantity = sum(paid_quantity),
+    quantity_per_head = sum(paid_quantity)/mean(hb_population)
+  ) %>% 
+  ungroup() %>% 
+  gt() %>% 
+  tab_header(
+    title = "Prescription of Salbutamol across NHS Health Boards"
+  ) %>% 
+  tab_source_note(
+    source_note = "Source: ********"
+  ) %>% 
+  cols_label(
+    hb_name = "Health Board",
+    hb_population = "Health Board Population",
+    number_of_paid_items = "Total Number of Paid Items",
+    paid_quantity = "Total Paid Quantity",
+    quantity_per_head = "Salbutamol Dispensed Per Person"
+  ) %>% 
+  opt_stylize()
+salbutamol_data_table
+
+```
+
+## Line graphs
+
+```{r pressure, include=TRUE, out.width="150%"}
+
+salbutamol_prescription_12months <- salbutamol_data %>% 
+  mutate(paid_date_month = parse_date_time(paid_date_month, "ym")) %>% 
+  group_by(hb_name, paid_date_month) %>% 
+  summarise(paid_quantity = sum(paid_quantity))
 
 line_chart <- salbutamol_prescription_12months %>%
   ggplot(aes(x = paid_date_month, y = paid_quantity)) +
@@ -71,3 +144,48 @@ For the future, I plan to produce similar graphs for other beta-blockers and may
 Regarding seasonal changes, I could divide the 12 months into 4 seasons (3 months data combined for total data for each season) but I need to investigate the best way to present the data across seasons.
 
 If I end up having too many graphs, I might decide to only have graphs for data regarding all beta-blockers combined rather than specific beta-blockers like salbutamol.
+
+## Maps
+
+```{r, out.width="100%"}
+
+salbutamol_data_hb <- NHS_healthboards %>%
+  full_join(salbutamol_data, 
+            by = join_by(HBCode == hbt)) %>% 
+  filter(!is.na(HBName)) %>% 
+  group_by(HBCode) %>% 
+  summarise(paid_quantity = sum(paid_quantity))
+
+map_salbutamol_data_hb <- salbutamol_data_hb %>%
+  ggplot(aes(fill = paid_quantity)) +
+  geom_sf(colour = "black", size = 0.1) +
+  scale_fill_distiller(
+    palette = "Blues", 
+    direction = 1,  
+    name = "No. of Prescriptions"
+  ) +
+  labs(
+    title = "Total Number of Salbutamol Prescriptions", 
+    subtitle = "Salbutamol Prescriptions by Health Board"
+  ) +
+  theme_void() +
+  theme(
+    plot.title = element_text(face = "bold", size = 16), 
+    plot.subtitle = element_text(size = 8)
+  )  
+
+map_salbutamol_data_hb
+
+```
+
+
+# Conclusions
+
+
+Include Limitations of data and next steps (particularly in terms of data that would allow for further analysis)
+
+# References
+
+1.Marques L, Vale N. Salbutamol in the management of asthma: A review. International Journal of Molecular Sciences [Internet]. 2022;23(22). Available from: https://pmc.ncbi.nlm.nih.gov/articles/PMC9696300/
+
+2.
