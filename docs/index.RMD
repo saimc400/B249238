@@ -32,13 +32,28 @@ library(plotly)
 
 Salbutamol is a short-acting beta-agonist (SABA) which acts on the smooth muscle surrounding the bronchi. By inhibiting smooth muscle contraction, it induces bronchodilation which relieves asthma symptoms(1). Salbutamol is the most commonly prescribed inhaler in Scotland
 
-This report aims to investigate the trends regarding prescribing of salbutamol in Scotland in the year 2024. With a focus on variations across the different NHS Health Boards, and across different seasons throughout the year.
+This report aims to investigate the trends regarding prescribing of salbutamol inhalers in Scotland in the year 2024. With a focus on variations across the different NHS Health Boards, and across different seasons throughout the year.
 
 It is imortant to consider the influence of these factors on the prescribing of salbutamol, as 
 
 Across the NHS Health Boards, we would expect a greater number of total prescriptions in health boards with a greater overall population. If we look at data
 
-First we load in data files for the prescriptions in each month of 2024. We also load in data for the NHS Health Boards:
+First we load in data files for the prescriptions in 2024. We also load in data for the NHS Health Boards:
+
+We can find the January - June 2024 file and its specific data dictionary here:
+<https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community/resource/f0df380b-3f9b-4536-bb87-569e189b727a>
+
+We can find the July - December 2024 file and its specific data dictionary here:
+<https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community/resource/f3b9f2e2-66c0-4310-9b8e-734781d2ed0a>
+
+We can find the Health Board names dataset and its specific data dictionary here:
+<https://www.opendata.nhs.scot/dataset/geography-codes-and-labels/resource/652ff726-e676-4a20-abda-435b98dd7bdc>
+
+We can find the NHS Health Boards geographical datasets here:
+<https://www.data.gov.uk/dataset/27d0fe5f-79bb-4116-aec9-a8e565ff756a/nhs-health-boards-scotland>
+
+We can find the population datasets by health board here:
+<https://statistics.ukdataservice.ac.uk/dataset/scotland-s-census-2022-uv102a-age-by-sex>
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 
@@ -50,12 +65,6 @@ data_jul_dec_2024 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14
 
 HB_lookup <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-b534-d6e17229cc7b/resource/652ff726-e676-4a20-abda-435b98dd7bdc/download/hb14_hb19.csv") %>% 
   clean_names()
-
-combined_data_2024 <- bind_rows(data_jan_jun_2024, data_jul_dec_2024) %>% 
-  clean_names() %>% 
-  full_join(HB_lookup, by = c("hbt" = "hb")) %>% 
-  select(hb_name, hbt:paid_date_month) %>% 
-  filter(!is.na(hb_name))
 
 NHS_healthboards <- st_read(here("data", "SG_NHS_HealthBoards_2019.shp"))
 
@@ -77,10 +86,19 @@ population_data <- read_csv(here( "data", "UV102a_age_health_board_census.csv"),
 
 ```{r}
 
+combined_data_2024 <- bind_rows(data_jan_jun_2024, data_jul_dec_2024) %>% 
+  clean_names() %>% 
+  full_join(HB_lookup, by = c("hbt" = "hb")) %>%
+  select(hb_name, hbt:paid_date_month) %>% 
+  filter(!is.na(hb_name)) %>% 
+  full_join(population_data, 
+            by = join_by(hb_name))
+
 salbutamol_inhalers <- c("SALBUTAMOL", "AIROMIR", "ASMALAL", "SALAMOL", "SALBULIN", "VENTOLIN")
 
-salbutamol_data <- combined_data_2024 %>% 
-  filter(str_detect(bnf_item_description, paste(salbutamol_inhalers, collapse = "|")))
+salbutamol_inhaler_data <- combined_data_2024 %>%
+  filter(str_detect(bnf_item_description, paste(salbutamol_inhalers, collapse = "|"))) %>%
+  filter(str_detect(bnf_item_description, "HALER"))
 
 ```
 
@@ -93,9 +111,7 @@ All of the data files were used to produce the following results consisting of a
 
 ```{r}
 
-salbutamol_data_table <- population_data %>%
-  full_join(salbutamol_data, 
-            by = join_by(hb_name)) %>%
+salbutamol_inhaler_data_table <- salbutamol_inhaler_data %>%
   group_by(hb_name, hb_population) %>% 
   summarise(
     number_of_paid_items = sum(number_of_paid_items), 
@@ -118,7 +134,7 @@ salbutamol_data_table <- population_data %>%
     quantity_per_head = "Salbutamol Dispensed Per Person"
   ) %>% 
   opt_stylize()
-salbutamol_data_table
+salbutamol_inhaler_data_table
 
 ```
 
@@ -126,17 +142,18 @@ salbutamol_data_table
 
 ```{r pressure, include=TRUE, fig.width=10, fig.height=15}
 
-seasonal_salbutamol_prescriptions <- salbutamol_data %>% 
+seasonal_salbutamol_prescriptions <- salbutamol_inhaler_data %>% 
   mutate(season = case_when(paid_date_month %in% c(202403, 202404, 202405) ~ "Spring", paid_date_month %in% c(202406, 202407, 202408) ~ "Summer", paid_date_month %in% c(202409, 202410, 202411) ~ "Autumn", paid_date_month %in% c(202412, 202401, 202402) ~ "Winter"), season = factor(season, levels = c("Spring", "Summer", "Autumn", "Winter"))) %>%
-  group_by(hb_name, season) %>% 
-  summarise(avg_paid_quantity = mean(paid_quantity, na.rm = TRUE))
+  group_by(hb_name, season, hb_population) %>% 
+  summarise(avg_paid_quantity = mean(paid_quantity, na.rm = TRUE)) %>% 
+  summarise(avg_quantity_per_100k = (avg_paid_quantity/hb_population)*100000)
 
 
-line_graph <- ggplot(seasonal_salbutamol_prescriptions, aes(x = season, y = avg_paid_quantity, group = hb_name)) +
+line_graph <- ggplot(seasonal_salbutamol_prescriptions, aes(x = season, y = avg_quantity_per_100k, group = hb_name)) +
   geom_line(color = "darkgreen", linewidth = 1) +
   geom_point() +
   facet_wrap(~ hb_name, ncol = 3, scales = "free") +
-  labs(x = "Season", y = "Average Quantity per Season", title = "Seasonal Salbutamol Prescribing by Health Board") +
+  labs(x = "Season", y = "Average Quantity per 100,000", title = "Seasonal Salbutamol Prescribing by Health Board") +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 10))
 line_graph
@@ -157,14 +174,14 @@ If I end up having too many graphs, I might decide to only have graphs for data 
 
 ```{r}
 
-salbutamol_data_hb <- NHS_healthboards %>%
-  full_join(salbutamol_data, 
+salbutamol_inhaler_data_hb <- NHS_healthboards %>%
+  full_join(salbutamol_inhaler_data, 
             by = join_by(HBCode == hbt)) %>% 
   filter(!is.na(HBName)) %>% 
   group_by(HBCode) %>% 
   summarise(paid_quantity = sum(paid_quantity))
 
-map_salbutamol_data_hb <- salbutamol_data_hb %>%
+map_salbutamol_inhaler_data_hb <- salbutamol_inhaler_data_hb %>%
   ggplot(aes(fill = paid_quantity)) +
   geom_sf(colour = "black", size = 0.1) +
   scale_fill_distiller(
@@ -182,7 +199,7 @@ map_salbutamol_data_hb <- salbutamol_data_hb %>%
     plot.subtitle = element_text(size = 8)
   )  
 
-map_salbutamol_data_hb
+map_salbutamol_inhaler_data_hb
 
 ```
 
