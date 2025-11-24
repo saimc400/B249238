@@ -125,24 +125,20 @@ All of the data files were used to produce the following results consisting of a
 salbutamol_inhaler_data_table <- salbutamol_inhaler_data %>%
   group_by(hb_name, hb_population) %>% 
   summarise(
-    number_of_paid_items = sum(number_of_paid_items), 
-    paid_quantity = sum(paid_quantity),
-    quantity_per_head = sum(paid_quantity)/mean(hb_population)
+    quantity_per_1k = (sum(paid_quantity)/mean(hb_population))*1000
   ) %>% 
   ungroup() %>% 
   gt() %>% 
   tab_header(
-    title = "Prescription of Salbutamol across NHS Health Boards"
+    title = "Prescription of Salbutamol Inhalers across NHS Health Boards"
   ) %>% 
   tab_source_note(
-    source_note = "Source: ********"
+    source_note = "Source: 2024 Prescription datasets from the NHS OpenData sources, Health Board Population data from  Scotland's Census Data in UK Data Service source"
   ) %>% 
   cols_label(
     hb_name = "Health Board",
     hb_population = "Health Board Population",
-    number_of_paid_items = "Total Number of Paid Items",
-    paid_quantity = "Total Paid Quantity",
-    quantity_per_head = "Salbutamol Dispensed Per Person"
+    quantity_per_1k = "Salbutamol Inhaler Prescriptions Per 1,000 people"
   ) %>% 
   opt_stylize()
 salbutamol_inhaler_data_table
@@ -150,6 +146,13 @@ salbutamol_inhaler_data_table
 ```
 
 ## Line graphs
+
+```{r}
+
+```
+
+
+The above graph shows the prescription of salbutamol inhalers throughout the 4 seasons (spring, summer, autumn and winter) in the year 2024. 
 
 ```{r pressure, include=TRUE, fig.width=10, fig.height=15}
 
@@ -172,9 +175,14 @@ line_chart <- ggplot(seasonal_salbutamol_prescriptions, aes(x = season, y = avg_
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 10))
 
-ggplotly(line_chart, tooltip = "text")
+line_chart
 
 ```
+
+
+To further analyse the potential correlation between seasons and prescribing of salbutamol inhalers
+
+
 
 
 These graphs above show the variations in monthly prescribing of salbutamol throughout 2024 for each of the Health boards in Scotland
