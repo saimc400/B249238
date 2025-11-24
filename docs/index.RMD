@@ -25,6 +25,7 @@ library(gt) # tables
 library(here) # directory structure
 library(sf)
 library(plotly)
+library(scales)
 
 ```
 
@@ -107,6 +108,16 @@ salbutamol_inhaler_data <- combined_data_2024 %>%
 
 All of the data files were used to produce the following results consisting of a summary table, line graphs and maps.
 
+
+```{r}
+
+
+
+```
+
+
+
+
 ## Summary Table
 
 ```{r}
@@ -146,17 +157,22 @@ seasonal_salbutamol_prescriptions <- salbutamol_inhaler_data %>%
   mutate(season = case_when(paid_date_month %in% c(202403, 202404, 202405) ~ "Spring", paid_date_month %in% c(202406, 202407, 202408) ~ "Summer", paid_date_month %in% c(202409, 202410, 202411) ~ "Autumn", paid_date_month %in% c(202412, 202401, 202402) ~ "Winter"), season = factor(season, levels = c("Spring", "Summer", "Autumn", "Winter"))) %>%
   group_by(hb_name, season, hb_population) %>% 
   summarise(avg_paid_quantity = mean(paid_quantity, na.rm = TRUE)) %>% 
-  summarise(avg_quantity_per_100k = (avg_paid_quantity/hb_population)*100000)
+  summarise(avg_quantity_per_1k = (avg_paid_quantity/hb_population)*1000)
 
 
-line_graph <- ggplot(seasonal_salbutamol_prescriptions, aes(x = season, y = avg_quantity_per_100k, group = hb_name)) +
+line_chart <- ggplot(seasonal_salbutamol_prescriptions, aes(x = season, y = avg_quantity_per_1k, group = hb_name, text = paste(
+  "Health Board: ", hb_name, "<br>",
+  "Season: ", season, "<br>",
+  "Average Quantity per 1,000: ", scales::comma(avg_quantity_per_1k, accuracy = 1)
+))) +
   geom_line(color = "darkgreen", linewidth = 1) +
   geom_point() +
   facet_wrap(~ hb_name, ncol = 3, scales = "free") +
-  labs(x = "Season", y = "Average Quantity per 100,000", title = "Seasonal Salbutamol Prescribing by Health Board") +
+  labs(x = "Season", y = "Average Quantity of Salbutamol Inhaler Prescriptions per 1,000 people", title = "Seasonal Salbutamol Prescribing by Health Board") +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 10))
-line_graph
+
+ggplotly(line_chart, tooltip = "text")
 
 ```
 
@@ -174,32 +190,23 @@ If I end up having too many graphs, I might decide to only have graphs for data 
 
 ```{r}
 
-salbutamol_inhaler_data_hb <- NHS_healthboards %>%
+salbutamol_inhaler_map_data <- NHS_healthboards %>%
   full_join(salbutamol_inhaler_data, 
             by = join_by(HBCode == hbt)) %>% 
   filter(!is.na(HBName)) %>% 
-  group_by(HBCode) %>% 
-  summarise(paid_quantity = sum(paid_quantity))
+  group_by(hb_name, hb_population) %>% 
+  summarise(paid_quantity = sum(paid_quantity)) %>% 
+  summarise(quantity_per_1k = (paid_quantity/hb_population)*1000)
 
-map_salbutamol_inhaler_data_hb <- salbutamol_inhaler_data_hb %>%
-  ggplot(aes(fill = paid_quantity)) +
+map_salbutamol_inhaler_per_1k <- salbutamol_inhaler_map_data %>%
+  ggplot(aes(fill = quantity_per_1k, text = paste("Health Board: ", hb_name, "<br>Prescriptions per 1,000: ", comma(quantity_per_1k, accuracy = 1)))) +
   geom_sf(colour = "black", size = 0.1) +
-  scale_fill_distiller(
-    palette = "Blues", 
-    direction = 1,  
-    name = "No. of Prescriptions"
-  ) +
-  labs(
-    title = "Total Number of Salbutamol Prescriptions", 
-    subtitle = "Salbutamol Prescriptions by Health Board"
-  ) +
+  scale_fill_distiller(palette = "Blues", direction = 1, name = "No. of Prescriptions per 1,000 people", labels = scales::comma_format()) +
+  labs(title = "Salbutamol Inhaler Prescriptions per 1,000 people", subtitle = "Prescriptions by Health Board") +
   theme_void() +
-  theme(
-    plot.title = element_text(face = "bold", size = 16), 
-    plot.subtitle = element_text(size = 8)
-  )  
+  theme(plot.title = element_text(face = "bold", size = 16), plot.subtitle = element_text(size = 8))  
 
-map_salbutamol_inhaler_data_hb
+ggplotly(map_salbutamol_inhaler_per_1k, tooltip = "text")
 
 ```
 
