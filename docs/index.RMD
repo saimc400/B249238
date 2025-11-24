@@ -40,7 +40,7 @@ Across the NHS Health Boards, we would expect a greater number of total prescrip
 
 First we load in data files for the prescriptions in each month of 2024. We also load in data for the NHS Health Boards:
 
-```{r, include=TRUE}
+```{r, include=TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 
 data_jan_jun_2024 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/f0df380b-3f9b-4536-bb87-569e189b727a/download/hb_pitc2024_01_06-1.csv") %>% 
   clean_names()
@@ -155,7 +155,7 @@ If I end up having too many graphs, I might decide to only have graphs for data 
 
 ## Maps
 
-```{r, out.width="100%"}
+```{r}
 
 salbutamol_data_hb <- NHS_healthboards %>%
   full_join(salbutamol_data, 
