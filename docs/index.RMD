@@ -124,7 +124,7 @@ salbutamol_data_table
 
 ## Line graphs
 
-```{r pressure, include=TRUE, fig.width=15, fig.height=20}
+```{r pressure, include=TRUE, fig.width=10, fig.height=15}
 
 seasonal_salbutamol_prescriptions <- salbutamol_data %>% 
   mutate(season = case_when(paid_date_month %in% c(202403, 202404, 202405) ~ "Spring", paid_date_month %in% c(202406, 202407, 202408) ~ "Summer", paid_date_month %in% c(202409, 202410, 202411) ~ "Autumn", paid_date_month %in% c(202412, 202401, 202402) ~ "Winter"), season = factor(season, levels = c("Spring", "Summer", "Autumn", "Winter"))) %>%
@@ -139,8 +139,6 @@ line_graph <- ggplot(seasonal_salbutamol_prescriptions, aes(x = season, y = avg_
   labs(x = "Season", y = "Average Quantity per Season", title = "Seasonal Salbutamol Prescribing by Health Board") +
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 10))
-
-plotly::ggplotly(line_graph)
 
 ```
 
