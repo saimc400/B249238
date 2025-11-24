@@ -8,11 +8,16 @@ output:
     toc_float: true
     code_folding: hide
     number_sections: true
+    link-citations: yes
 ---
 
 ```{r setup, include=FALSE}
 
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+
+#install.packages("janitor")
+#install.packages("sf")
+#install.packages("plotly")
 
 library(tidyverse)
 library(janitor) # cleaning data
@@ -25,13 +30,13 @@ library(plotly)
 
 # Introduction
 
-Salbutamol is a short-acting beta-agonist (SABA) most commonly prescribed in the treatment of asthma. 
+Salbutamol is a short-acting beta-agonist (SABA) which acts on the smooth muscle surrounding the bronchi. By inhibiting smooth muscle contraction, it induces bronchodilation which relieves asthma symptoms(1). Salbutamol is the most commonly prescribed inhaler in Scotland
 
-The aim of this report is to investigate the trends regarding prescribing of salbutamol in Scotland in the year 2024. With a focus on 
+This report aims to investigate the trends regarding prescribing of salbutamol in Scotland in the year 2024. With a focus on variations across the different NHS Health Boards, and across different seasons throughout the year.
 
-It is imortant to consider the influence of these factors on the prescribing of salbutamol
+It is imortant to consider the influence of these factors on the prescribing of salbutamol, as 
 
-Across the NHS Health Boards, we would expect 
+Across the NHS Health Boards, we would expect a greater number of total prescriptions in health boards with a greater overall population. If we look at data
 
 First we load in data files for the prescriptions in each month of 2024. We also load in data for the NHS Health Boards:
 
@@ -52,7 +57,7 @@ combined_data_2024 <- bind_rows(data_jan_jun_2024, data_jul_dec_2024) %>%
   select(hb_name, hbt:paid_date_month) %>% 
   filter(!is.na(hb_name))
 
-NHS_healthboards <- st_read(here("data", "Week6_NHS_HealthBoards_2019.shp"))
+NHS_healthboards <- st_read(here("data", "SG_NHS_HealthBoards_2019.shp"))
 
 population_data <- read_csv(here( "data", "UV102a_age_health_board_census.csv"), skip = 10) %>% 
   # Rename the last column to avoid the messy name in column 6
@@ -72,15 +77,18 @@ population_data <- read_csv(here( "data", "UV102a_age_health_board_census.csv"),
 
 ```{r}
 
-salbutamol_drugs <- c("SALBUTAMOL", "AIROMIR", "ASMALAL", "SALAMOL", "SALBULIN", "VENTOLIN")
+salbutamol_inhalers <- c("SALBUTAMOL", "AIROMIR", "ASMALAL", "SALAMOL", "SALBULIN", "VENTOLIN")
 
 salbutamol_data <- combined_data_2024 %>% 
-  filter(str_detect(bnf_item_description, paste(salbutamol_drugs, collapse = "|")))
+  filter(str_detect(bnf_item_description, paste(salbutamol_inhalers, collapse = "|")))
 
 ```
 
 
 # Results
+
+All of the data files were used to produce the following results consisting of a summary table, line graphs and maps.
+
 ## Summary Table
 
 ```{r}
@@ -116,22 +124,23 @@ salbutamol_data_table
 
 ## Line graphs
 
-```{r pressure, include=TRUE, out.width="150%"}
+```{r pressure, include=TRUE, fig.width=15, fig.height=20}
 
-salbutamol_prescription_12months <- salbutamol_data %>% 
-  mutate(paid_date_month = parse_date_time(paid_date_month, "ym")) %>% 
-  group_by(hb_name, paid_date_month) %>% 
-  summarise(paid_quantity = sum(paid_quantity))
+seasonal_salbutamol_prescriptions <- salbutamol_data %>% 
+  mutate(season = case_when(paid_date_month %in% c(202403, 202404, 202405) ~ "Spring", paid_date_month %in% c(202406, 202407, 202408) ~ "Summer", paid_date_month %in% c(202409, 202410, 202411) ~ "Autumn", paid_date_month %in% c(202412, 202401, 202402) ~ "Winter"), season = factor(season, levels = c("Spring", "Summer", "Autumn", "Winter"))) %>%
+  group_by(hb_name, season) %>% 
+  summarise(avg_paid_quantity = mean(paid_quantity, na.rm = TRUE))
 
-line_chart <- salbutamol_prescription_12months %>%
-  ggplot(aes(x = paid_date_month, y = paid_quantity)) +
+
+line_graph <- ggplot(seasonal_salbutamol_prescriptions, aes(x = season, y = avg_paid_quantity, group = hb_name)) +
   geom_line(color = "darkgreen", linewidth = 1) +
-  facet_wrap(~ hb_name, nrow = 3, scales = "free") +
-  scale_x_datetime(date_labels = "%b\n%Y", date_breaks = "3 months") +
-  labs(x = "Month", y = "Quantity", title = "Salbutamol Prescribing by Health Board") +
-  theme_bw()
+  geom_point() +
+  facet_wrap(~ hb_name, ncol = 3, scales = "free") +
+  labs(x = "Season", y = "Average Quantity per Season", title = "Seasonal Salbutamol Prescribing by Health Board") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 10))
 
-line_chart
+plotly::ggplotly(line_graph)
 
 ```
 
@@ -183,6 +192,10 @@ map_salbutamol_data_hb
 
 
 Include Limitations of data and next steps (particularly in terms of data that would allow for further analysis)
+
+However, there are some limitations in the data used in this report. For instance, 
+
+Regarding potential next steps, it would be useful 
 
 # References
 
