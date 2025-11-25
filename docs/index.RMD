@@ -39,35 +39,51 @@ It is imortant to consider the influence of these factors on the prescribing of 
 
 Across the NHS Health Boards, we would expect a greater number of total prescriptions in health boards with a greater overall population. If we look at data
 
-First we load in data files for the prescriptions in 2024. We also load in data for the NHS Health Boards:
+Here are the sources of the data files used in this report:
 
 We can find the January - June 2024 file and its specific data dictionary here:
 <https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community/resource/f0df380b-3f9b-4536-bb87-569e189b727a>
-
-We can find the July - December 2024 file and its specific data dictionary here:
-<https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community/resource/f3b9f2e2-66c0-4310-9b8e-734781d2ed0a>
-
-We can find the Health Board names dataset and its specific data dictionary here:
-<https://www.opendata.nhs.scot/dataset/geography-codes-and-labels/resource/652ff726-e676-4a20-abda-435b98dd7bdc>
-
-We can find the NHS Health Boards geographical datasets here:
-<https://www.data.gov.uk/dataset/27d0fe5f-79bb-4116-aec9-a8e565ff756a/nhs-health-boards-scotland>
-
-We can find the population datasets by health board here:
-<https://statistics.ukdataservice.ac.uk/dataset/scotland-s-census-2022-uv102a-age-by-sex>
 
 ```{r, include=TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 
 data_jan_jun_2024 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/f0df380b-3f9b-4536-bb87-569e189b727a/download/hb_pitc2024_01_06-1.csv") %>% 
   clean_names()
 
+```
+
+We can find the July - December 2024 file and its specific data dictionary here:
+<https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community/resource/f3b9f2e2-66c0-4310-9b8e-734781d2ed0a>
+
+```{r, include=TRUE, message = FALSE, warning = FALSE, results = 'hide'}
+
 data_jul_dec_2024 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/f3b9f2e2-66c0-4310-9b8e-734781d2ed0a/download/hb_pitc2024_07_12-1.csv") %>% 
   clean_names()
+
+```
+
+We can find the Health Board names dataset and its specific data dictionary here:
+<https://www.opendata.nhs.scot/dataset/geography-codes-and-labels/resource/652ff726-e676-4a20-abda-435b98dd7bdc>
+
+```{r, include=TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 
 HB_lookup <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-b534-d6e17229cc7b/resource/652ff726-e676-4a20-abda-435b98dd7bdc/download/hb14_hb19.csv") %>% 
   clean_names()
 
+```
+
+We can find the NHS Health Boards geographical datasets here:
+<https://www.data.gov.uk/dataset/27d0fe5f-79bb-4116-aec9-a8e565ff756a/nhs-health-boards-scotland>
+
+```{r, include=TRUE, message = FALSE, warning = FALSE, results = 'hide'}
+
 NHS_healthboards <- st_read(here("data", "SG_NHS_HealthBoards_2019.shp"))
+
+```
+
+We can find the population datasets by health board here:
+<https://statistics.ukdataservice.ac.uk/dataset/scotland-s-census-2022-uv102a-age-by-sex>
+
+```{r, include=TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 
 population_data <- read_csv(here( "data", "UV102a_age_health_board_census.csv"), skip = 10) %>% 
   # Rename the last column to avoid the messy name in column 6
@@ -192,7 +208,7 @@ From this data we can see that
 These graphs above show the variations in monthly prescribing of salbutamol throughout 2024 for each of the Health boards in Scotland
 
 
-## Maps
+## Map
 
 ```{r}
 
@@ -212,8 +228,9 @@ map_salbutamol_inhaler_per_1k <- salbutamol_inhaler_map_data %>%
   theme_void() +
   theme(plot.title = element_text(face = "bold", size = 16), plot.subtitle = element_text(size = 8))  
 
-ggplotly(map_salbutamol_inhaler_per_1k, tooltip = "text") %>% 
+plotly_map <- ggplotly(map_salbutamol_inhaler_per_1k, tooltip = "text") %>% 
   config(displayModeBar = FALSE)
+plotly_map
 
 ```
 
