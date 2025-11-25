@@ -31,9 +31,9 @@ library(scales)
 
 # Introduction
 
-Salbutamol is a short-acting beta-agonist (SABA) which acts on the smooth muscle surrounding the bronchi. By inhibiting smooth muscle contraction, it induces bronchodilation which relieves asthma symptoms(1). Salbutamol is the most commonly prescribed inhaler in Scotland
+Salbutamol is a short-acting beta-agonist (SABA) which acts on the smooth muscle surrounding the bronchi. By inhibiting smooth muscle contraction, it induces bronchodilation which relieves bronchoconstriction, most commonly seen in patients with asthma or COPD(1). Salbutamol is the most commonly prescribed inhaler in Scotland.
 
-This report aims to investigate the trends regarding prescribing of salbutamol inhalers in Scotland in the year 2024. With a focus on variations across the different NHS Health Boards, and across different seasons throughout the year.
+This report aims to investigate the trends regarding prescribing of salbutamol inhalers in Scotland in the year 2024, with a focus on variations across the different seasons throughout the year.
 
 It is imortant to consider the influence of these factors on the prescribing of salbutamol, as 
 
@@ -180,19 +180,17 @@ line_chart
 ```
 
 
-To further analyse the potential correlation between seasons and prescribing of salbutamol inhalers
+To further analyse the potential correlation between seasons and prescribing of salbutamol inhalers, the above graphs were produced. Each graph shows the trends in salbutamol inhaler prescriptions across the 4 seasons for each of the 14 health boards. 
+
+From this data we can see that 
+
+
 
 
 
 
 These graphs above show the variations in monthly prescribing of salbutamol throughout 2024 for each of the Health boards in Scotland
 
-
-For the future, I plan to produce similar graphs for other beta-blockers and maybe also graphs for all beta-blockers combined. It might also be useful for me to include a summary table of prescribing of beta-blockers across health boards.
-
-Regarding seasonal changes, I could divide the 12 months into 4 seasons (3 months data combined for total data for each season) but I need to investigate the best way to present the data across seasons.
-
-If I end up having too many graphs, I might decide to only have graphs for data regarding all beta-blockers combined rather than specific beta-blockers like salbutamol.
 
 ## Maps
 
@@ -210,13 +208,16 @@ map_salbutamol_inhaler_per_1k <- salbutamol_inhaler_map_data %>%
   ggplot(aes(fill = quantity_per_1k, text = paste("Health Board: ", hb_name, "<br>Prescriptions per 1,000: ", comma(quantity_per_1k, accuracy = 1)))) +
   geom_sf(colour = "black", size = 0.1) +
   scale_fill_distiller(palette = "Blues", direction = 1, name = "No. of Prescriptions per 1,000 people", labels = scales::comma_format()) +
-  labs(title = "Salbutamol Inhaler Prescriptions per 1,000 people", subtitle = "Prescriptions by Health Board") +
+  labs(title = "Salbutamol Inhaler Prescriptions by Health Board") +
   theme_void() +
   theme(plot.title = element_text(face = "bold", size = 16), plot.subtitle = element_text(size = 8))  
 
-ggplotly(map_salbutamol_inhaler_per_1k, tooltip = "text")
+ggplotly(map_salbutamol_inhaler_per_1k, tooltip = "text") %>% 
+  config(displayModeBar = FALSE)
 
 ```
+
+This map shows 
 
 
 # Conclusions
@@ -224,9 +225,9 @@ ggplotly(map_salbutamol_inhaler_per_1k, tooltip = "text")
 
 Include Limitations of data and next steps (particularly in terms of data that would allow for further analysis)
 
-However, there are some limitations in the data used in this report. For instance, 
+However, there are some limitations in the data used in this report. For instance, this report only investigates the available data for the year 2024. Therefore, we cannot conclude that the trends seen in the above data is representative of the seasonal trends in salbutamol inhaler prescriptions in Scotland. It is also difficult to come to a conclusion with the avaiable data whether the trends observed are directly caused by seasonal changes in the environment and weather, as opposed to being correlated with seasonal changes. Lack of acknowledgement of potential confounding variables is a limiting factor in this report.
 
-Regarding potential next steps, it would be useful 
+Regarding potential next steps, it would be useful to research further into seasonal trends in other years along with 2024 to investigate whether the trends observed above are yearly, or if they are different each year. 
 
 # References
 
