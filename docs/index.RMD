@@ -162,7 +162,7 @@ salbutamol_inhaler_data_table
 
 ## Line graphs
 
-```{r, include=TRUE, fig.width=10}
+```{r, include=TRUE, fig.width=7}
 
 total_population_scotland <- population_data %>%
   summarise(total_population = sum(hb_population, na.rm = TRUE)) %>%
@@ -194,6 +194,7 @@ plotly_graph
 
 
 The above graph shows the prescription of salbutamol inhalers throughout the 4 seasons (spring, summer, autumn and winter) in the year 2024. 
+
 
 ```{r, include=TRUE, fig.width=10, fig.height=15}
 
@@ -232,7 +233,7 @@ From this data we can see that
 
 ## Map
 
-```{r, fig.width=10}
+```{r, fig.height=7}
 
 salbutamol_inhaler_map_data <- NHS_healthboards %>%
   full_join(salbutamol_inhaler_data, 
