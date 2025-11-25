@@ -162,7 +162,7 @@ salbutamol_inhaler_data_table
 
 ## Line graphs
 
-```{r, include=TRUE, fig.width=10, fig.height=10}
+```{r, include=TRUE, fig.width=10}
 
 total_population_scotland <- population_data %>%
   summarise(total_population = sum(hb_population, na.rm = TRUE)) %>%
@@ -232,7 +232,7 @@ From this data we can see that
 
 ## Map
 
-```{r}
+```{r, fig.width=10}
 
 salbutamol_inhaler_map_data <- NHS_healthboards %>%
   full_join(salbutamol_inhaler_data, 
