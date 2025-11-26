@@ -13,7 +13,7 @@ output:
 
 ```{r setup, include=FALSE}
 
-knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 #install.packages("janitor")
 #install.packages("sf")
@@ -33,9 +33,9 @@ library(scales)
 
 Salbutamol is a short-acting beta-agonist (SABA) which acts on the smooth muscle surrounding the bronchi. By inhibiting smooth muscle contraction, it induces bronchodilation which relieves bronchoconstriction, most commonly seen in patients with asthma or COPD(1). Salbutamol is the most commonly prescribed inhaler in Scotland.
 
-This report aims to investigate the trends regarding prescribing of salbutamol inhalers in Scotland in the year 2024, with a focus on variations across the different seasons throughout the year.
+This report aims to investigate the trends regarding prescribing of salbutamol inhalers in Scotland in the year 2024, with a focus on variations across the different seasons throughout the year. 
 
-It is imortant to consider the influence of these factors on the prescribing of salbutamol, as 
+It is important to consider the influence of these factors on the prescribing of salbutamol, as 
 
 Across the NHS Health Boards, we would expect a greater number of total prescriptions in health boards with a greater overall population. If we look at data
 
@@ -129,7 +129,7 @@ salbutamol_inhaler_data <- combined_data_2024 %>%
 
 # Results
 
-All of the data files were used to produce the following results consisting of a summary table, line graphs and maps.
+All of the data files were used to produce the following results consisting of a summary table, line graphs and a map.
 
 ## Summary Table
 
@@ -159,6 +159,10 @@ salbutamol_inhaler_data_table <- salbutamol_inhaler_data %>%
 salbutamol_inhaler_data_table
 
 ```
+
+
+This table summarises the relevant data
+
 
 ## Line graphs
 
@@ -193,7 +197,9 @@ plotly_graph
 ```
 
 
-The above graph shows the prescription of salbutamol inhalers throughout the 4 seasons (spring, summer, autumn and winter) in the year 2024. 
+The above graph shows the prescriptions of salbutamol inhalers in Scotland throughout the 4 seasons (spring, summer, autumn and winter) in the year 2024. 
+
+There is a clear increase in the number of salbutamol inhaler prescriptions during the winter months compared to the other seasons. 
 
 
 ```{r, include=TRUE, fig.width=10, fig.height=15}
@@ -205,11 +211,6 @@ seasonal_hb_totals <- salbutamol_inhaler_data %>%
   population = mean(hb_population, na.rm = TRUE),
   .groups = "drop") %>% 
   mutate(total_quantity_per_1k = (total_quantity / population) * 1000)
-
-seasonal_salbutamol_prescriptions <- salbutamol_inhaler_data %>% 
-  group_by(hb_name, season, hb_population) %>% 
-  summarise(avg_paid_quantity = sum(paid_quantity, na.rm = TRUE)) %>% 
-  summarise(total_seasonal_quantity_per_1k = (avg_paid_quantity/hb_population)*1000)
 
 line_chart <- ggplot(seasonal_hb_totals, aes(x = season, y = total_quantity_per_1k, group = hb_name
   )) +
@@ -227,7 +228,9 @@ line_chart
 
 To further analyse the potential correlation between seasons and prescribing of salbutamol inhalers, the above graphs were produced. Each graph shows the trends in salbutamol inhaler prescriptions across the 4 seasons for each of the 14 health boards. 
 
-From this data we can see that 
+These graphs allow for comparisons in the seasonal trends in prescriptions between health boards. From this data we can see, similar to the previous graph showing total salbutamol prescriptions across Scotland, that the majority of health boards observe increases in prescriptions during the winter season. 
+
+While there are increased prescriptions in winter months in the majority of the health borads, there are similar increases observed in the spring season in the health boards NHS Orkney, Shetland, Tayside and Western Isles. Of these health boards, NHS Western Isles sees a larger peak in prescriptions during spring than winter, and interestingly, NHS Shetland sees its lowest number of prescriptions in winter.
 
 
 
@@ -239,14 +242,14 @@ salbutamol_inhaler_map_data <- NHS_healthboards %>%
   full_join(salbutamol_inhaler_data, 
             by = join_by(HBCode == hbt)) %>% 
   filter(!is.na(HBName)) %>% 
-  group_by(hb_name, hb_population) %>% 
+  group_by(hb_name, season, hb_population) %>% 
   summarise(paid_quantity = sum(paid_quantity)) %>% 
   summarise(quantity_per_1k = (paid_quantity/hb_population)*1000)
 
 map_salbutamol_inhaler_per_1k <- salbutamol_inhaler_map_data %>%
   ggplot(aes(fill = quantity_per_1k, text = paste("Health Board: ", hb_name, "<br>Prescriptions per 1,000: ", comma(quantity_per_1k, accuracy = 1)))) +
   geom_sf(colour = "black", size = 0.1) +
-  scale_fill_distiller(palette = "Blues", direction = 1, name = "No. of Prescriptions per 1,000 people", labels = scales::comma_format()) +
+  scale_fill_distiller(palette = "Greens", direction = 1, name = "No. of Prescriptions per 1,000 people", labels = scales::comma_format()) +
   labs(title = "Salbutamol Inhaler Prescriptions by Health Board") +
   theme_void() +
   theme(plot.title = element_text(face = "bold", size = 16), plot.subtitle = element_text(size = 8))  
@@ -257,7 +260,8 @@ plotly_map
 
 ```
 
-This map shows 
+
+This map shows the number of prescriptions of salbutamol inhalers in each health board. 
 
 
 # Conclusions
