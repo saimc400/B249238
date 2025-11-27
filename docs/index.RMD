@@ -171,7 +171,7 @@ make_line_graph <- function(df, title, subtitle = NULL, facet = FALSE) {
       scales::comma(total_quantity_per_1k, accuracy = 1))))+
     geom_line(color = "green", linewidth = 1) +
     geom_point() +
-    labs(x = "Season", y = "Total Salbutamol Inhaler Prescriptions per 1,000 people", title = title, subtitle = subtitle) +
+    labs(x = "Season", y = "Total Salbutamol Prescriptions per 1,000 people", title = title, subtitle = subtitle) +
     #The line below creates limits in the y-axis values so number of prescriptions can be compared between health boards in Figure 2 as opposed to just trends being compared
     scale_y_continuous(limits = c(16000, 36000)) +
     theme_bw() +
@@ -227,7 +227,7 @@ There is a visible increase in the number of salbutamol inhaler prescriptions du
 
 ### Figure 2
 
-```{r, include=TRUE, fig.width=10, fig.height=15}
+```{r, include=TRUE, fig.width=9, fig.height=13}
 
 #calculates total number of prescriptions per 1,000 people for each health board to allow for faceted graphs to be produced
 seasonal_hb_totals <- salbutamol_inhaler_data %>%
