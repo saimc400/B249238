@@ -35,7 +35,7 @@ library(scales) #formatting labels (used to add commas)
 
 # Introduction
 
-Salbutamol is a short-acting beta-agonist (SABA) which is most commonly prescribed to patients with asthma or COPD. This inhaler relaxes the smooth muscle and dilates the airway, reducing asthmatic symptoms(1). It is important to understand the trends in prescriptions across seasons and health boards as it can help to better assess asthma control in patients, as well as identifying any potential health inequalities between health boards/regions. 
+Salbutamol is a short-acting beta-agonist (SABA) which is most commonly prescribed to patients with asthma or COPD. This inhaler relaxes the smooth muscle and dilates the airway, reducing asthmatic symptoms(1). It is important to understand the trends in prescriptions across seasons as it can help to better assess asthma control in patients throughout the year, especially with the changing weather and climate. Investigating the trends across health boards can help with identifying any potential health inequalities between health boards/regions. 
 
 The aim of this report was to investigate the changes in prescriptions of salbutamol inhalers in Scotland in the year 2024, with a focus on variations across the different seasons and across the health boards. 
 
