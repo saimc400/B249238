@@ -1,5 +1,5 @@
 ---
-title: 'Seasonal CHanges in Prescriptions of Salbutamol Inhalers'
+title: 'Seasonal Changes in Prescriptions of Salbutamol Inhalers'
 author: "B249238"
 output:
   html_document:
@@ -43,7 +43,7 @@ It is important to understand the trends in prescriptions across seasons and hea
 
 Since salbutamol inhalers are most commonly prescribed to patients with asthma/COPD, we would expect to see a greater number of prescriptions in the winter months as the colder air can worsen the respiratory symptoms of these conditions, and the spread of respiratory viruses can also cause breathing problems(2).
 
-In accordance with seasonal weather in Scotland(3), the data from the 12 months was grouped into 4 season: Spring (March - May), Summer (June - August), Autumn (September - November) and Winter (December - February). In the figures of this report, the number of prescriptions are reported per 1,000 people.
+In accordance with seasonal weather in Scotland(3), the data from the 12 months was grouped into 4 season: Spring (March - May), Summer (June - August), Autumn (September - November) and Winter (December - February). In the figures of this report, to adjust for population as a potential confounding variable, the number of prescriptions are reported per 1,000 people.
 
 Here are the sources of the data files used in this report:
 
@@ -273,7 +273,7 @@ scotland_plotly <- ggplotly(
 ) %>% 
   config(displayModeBar = FALSE)
 
-scotland_plot
+scotland_plotly
 
 ```
 
@@ -370,11 +370,11 @@ This map shows the number of prescriptions of salbutamol inhalers in each health
 # Conclusions
 
 
-From the data presented in this report, there is a clear correlation between seasons and salbutamol inhaler prescriptions in Scotland as a whole, with increased prescriptions during the winter season. This trend was seen across the NHS health boards, with NHS Orkney and NHS Tayside showing a similar increase carrying into Spring as well. The exception to this trend was seen in NHS Shetland and NHS Western Isles, where the greatest number of prescriptions was during Spring. While it is difficult to explain why this is the case with the above data, it is possibly due to the effect of some confounding variables. For example, socioeconomic status in different regions and health boards may affect patient accessibility to prescriptions and inhalers(5).
+From the data presented in this report, there is a clear correlation between seasons and salbutamol inhaler prescriptions in Scotland as a whole, with increased prescriptions during the winter season. This trend was seen across the NHS health boards, with NHS Orkney and NHS Tayside showing a similar increase carrying into Spring as well. The exception to this trend was seen in NHS Shetland and NHS Western Isles, where the greatest number of prescriptions was during Spring. While it is difficult to explain why this is the case with the above data, it is possibly due to the effect of some confounding variables. For example, socioeconomic status in different regions and health boards may affect patient accessibility to prescriptions and inhalers(5). Additionally, only data for 2024 was included. These limitations would need to be investigated to arrive to a definitive conclusion regarding the cause of the seasonal variation within and between health boards.
 
-However, there are some limitations in the data used in this report. For instance, this report only investigates the available data for the year 2024. Therefore, we cannot conclude that the trends seen in the above data is observed on a yearly basis. It is also difficult to come to a conclusion with the available data whether the trends observed are directly caused by seasonal changes in the environment and weather, as opposed to being correlated with seasonal changes. Lack of acknowledgement of potential confounding variables is a limiting factor in this report.
 
-Regarding potential next steps, it would be useful to research further into seasonal trends in other years along with 2024 to investigate whether the trends observed above are yearly, or if they are different each year. This report mainly focused on seasonal changes in prescriptions. To further investigate the changes across health boards, we could look at the SIMD scores across health boards to understand if the socioeconomic status influences salbutamol prescriptions.
+
+Regarding potential next steps, it would be useful to research further into seasonal trends throughout other years, as well as other influencing factors. This report mainly focused on seasonal changes in prescriptions. To further investigate the changes across health boards, we could look at the SIMD scores across health boards to understand if the socioeconomic status influences salbutamol prescriptions.
 
 There are no datasets for asthma or COPD prevalence in the 'Public Health Scotland' website (<https://www.opendata.nhs.scot/>). If such data were to become available, the seasonal influences in prescriptions could be further investigated for patients with asthma or COPD separately. Since salbutamol inhalers are primarily prescribed for asthma and COPD, it would be useful to investigate whether seasonal changes affect the number of prescriptions for one condition more than the other (for example, if seasonal changes affect asthma patients more than COPD patients and vice versa).  
 
