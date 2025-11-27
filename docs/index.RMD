@@ -122,24 +122,21 @@ combined_data_2024 <- bind_rows(data_jan_jun_2024, data_jul_dec_2024) %>%
     paid_date_month %in% c(202403, 202404, 202405) ~ "Spring", 
     paid_date_month %in% c(202406, 202407, 202408) ~ "Summer", 
     paid_date_month %in% c(202409, 202410, 202411) ~ "Autumn", 
-    paid_date_month %in% c(202412, 202401, 202402) ~ "Winter"
-    )
-  )
+    paid_date_month %in% c(202412, 202401, 202402) ~ "Winter"))
+
+```
+
+
+```{r}
 
 #Salbutamol and brand names for salbutamol selected in the prescriptions dataset
 salbutamol_inhalers <- c("SALBUTAMOL", "AIROMIR", "ASMALAL", "SALAMOL", "SALBULIN", "VENTOLIN")
 
-
 salbutamol_inhaler_data <- combined_data_2024 %>%
   #Salbutamol drug selected
-  filter(
-    str_detect(bnf_item_description,
-    paste(salbutamol_inhalers, collapse = "|"))
-    ) %>%
+  filter(str_detect(bnf_item_description, paste(salbutamol_inhalers, collapse = "|"))) %>%
   #Only inhalers selected from salbutamol data
-  filter(
-    str_detect(bnf_item_description, "HALER")
-    )
+  filter(str_detect(bnf_item_description, "HALER"))
 
 ```
 
@@ -155,39 +152,21 @@ All of the data files were used to produce the following results consisting of a
 ```{r}
 
 salbutamol_inhaler_data_table <- salbutamol_inhaler_data %>%
-  group_by(
-    hb_name, 
-    hb_population
-    ) %>% 
-  summarise(
-    total_quantity = sum(paid_quantity),
-    quantity_per_1k = (sum(paid_quantity)/mean(hb_population))*1000
-    ) %>% 
+  group_by(hb_name, hb_population) %>% 
+  summarise(total_quantity = sum(paid_quantity), quantity_per_1k = (sum(paid_quantity)/mean(hb_population))*1000) %>% 
   ungroup() %>% 
   gt() %>% 
-  tab_header(
-    title = "Prescription of Salbutamol Inhalers across NHS Health Boards"
-  ) %>% 
-  tab_source_note(
-    source_note = "Source: 2024 Prescription datasets from the NHS OpenData sources, Health Board Population data from  Scotland's Census Data in UK Data Service source"
-  ) %>% 
-  cols_label(
-    hb_name = "Health Board",
-    hb_population = "Health Board Population",
-    total_quantity = "Total Prescriptions",
-    quantity_per_1k = "Salbutamol Inhaler Prescriptions Per 1,000 people"
-  ) %>% 
-  fmt_number(
-    columns = c(hb_population, total_quantity, quantity_per_1k),
-    decimals = 0
-    ) %>% 
+  tab_header(title = "Prescription of Salbutamol Inhalers across NHS Health Boards in 2024") %>% 
+  tab_source_note(source_note = "Source: 2024 Prescription datasets from the NHS OpenData sources, Health Board Population data from  Scotland's Census Data in UK Data Service source") %>% 
+  cols_label(hb_name = "Health Board", hb_population = "Health Board Population", total_quantity = "Total Prescriptions", quantity_per_1k = "Salbutamol Inhaler Prescriptions Per 1,000 people") %>% 
+  fmt_number(columns = c(hb_population, total_quantity, quantity_per_1k), decimals = 0) %>% 
   opt_stylize()
 salbutamol_inhaler_data_table
 
 ```
 
 
-This table summarises the total number of inhalers prescribed across each health board in 2024, as well as the equivalent number per 1,000 people.
+This table summarises the total number of salbutamol inhalers prescribed across each health board in 2024, as well as the corresponding number per 1,000 people.
 
 
 ## Graphs
@@ -195,44 +174,26 @@ This table summarises the total number of inhalers prescribed across each health
 ```{r}
 
 #Function for making line graphs (as 2 separate line graphs are reported)
-make_line_graph <- function(
-    df, 
-    title, 
-    subtitle = NULL, 
-    facet = FALSE) {
-  
+make_line_graph <- function(df, title, subtitle = NULL, facet = FALSE) {
   seasonal_plot <- ggplot(
     df,
-    aes(
-      x = season,
-      y = total_quantity_per_1k,
-      group = if (facet) hb_name else 1,
+    aes(x = season, y = total_quantity_per_1k, group = if (facet) hb_name else 1,
       #Text shown when hovering over line graph (using plotly)
       text = paste(
       "Season: ", season, "<br>",
-      "Total Prescriptions per 1,000: ", scales::comma(total_quantity_per_1k, accuracy = 1)
-      )  #Includes a comma and no decimal points in prescriptions per 1,000 people
-    )
-  ) +
+      "Total Prescriptions per 1,000: ", scales::comma(total_quantity_per_1k, accuracy = 1))))+  #Includes a comma and no decimal points in prescriptions per 1,000 people +
     geom_line(color = "green", linewidth = 1) +
     geom_point() +
-    labs(
-      x = "Season",
-      y = "Total Salbutamol Inhaler Prescriptions per 1,000 people",
-      title = title,
-      subtitle = subtitle
-    ) +
+    labs(x = "Season", y = "Total Salbutamol Inhaler Prescriptions per 1,000 people", title = title, subtitle = subtitle) +
     scale_y_continuous(limits = c(16000, 36000)) +
     theme_bw() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
   #Code for Figure 2 plot where graphs are faceted by health board
   if (facet) {
-    seasonal_plot <- 
-      seasonal_plot + 
+    seasonal_plot <- seasonal_plot + 
       facet_wrap(~ hb_name, ncol = 3, scales = "free")
   }
-
   return(seasonal_plot)
 }
 
@@ -246,32 +207,21 @@ make_line_graph <- function(
 
 #Total population of Scotland calculated
 total_population_scotland <- population_data %>%
-  summarise(
-    total_population = sum(hb_population, na.rm = TRUE)
-    ) %>%
+  summarise(total_population = sum(hb_population, na.rm = TRUE)) %>%
   pull(total_population)
 
 #Total number of prescriptions across the four seasons in Scotland
 seasonal_totals <- salbutamol_inhaler_data %>%
-  mutate(
-    season = factor(season, levels = c("Spring", "Summer", "Autumn", "Winter"))
-    ) %>% 
+  mutate(season = factor(season, levels = c("Spring", "Summer", "Autumn", "Winter"))) %>% 
   group_by(season) %>%
-  summarise(
-    total_quantity = sum(paid_quantity, na.rm = TRUE)
-    )
+  summarise(total_quantity = sum(paid_quantity, na.rm = TRUE))
 
 #Total prescriptions per 1,000 people in Scotland
 salbutamol_prescriptions_2024 <- seasonal_totals %>%
-  mutate(
-    total_quantity_per_1k = (total_quantity / total_population_scotland) * 1000
-    )
+  mutate(total_quantity_per_1k = (total_quantity / total_population_scotland) * 1000)
 
 #Plot of Scotland prescription data
-scotland_plot <- make_line_graph(
-  salbutamol_prescriptions_2024,
-  title = "Seasonal Salbutamol Prescriptions per 1,000 people in 2024"
-)
+scotland_plot <- make_line_graph(salbutamol_prescriptions_2024, title = "Seasonal Salbutamol Prescriptions per 1,000 people in 2024")
 
 #Plotly used to allow for data to be observed while hovering over graph
 scotland_plotly <- ggplotly(
@@ -298,16 +248,9 @@ There is a clear increase in the number of salbutamol inhaler prescriptions duri
 
 seasonal_hb_totals <- salbutamol_inhaler_data %>%
   group_by(hb_name, season) %>% 
-  summarise(
-    total_quantity = sum(paid_quantity, na.rm = TRUE),
-    population = mean(hb_population, na.rm = TRUE)
-    ) %>% 
-    mutate(
-    season = factor(season, levels = c("Spring", "Summer", "Autumn", "Winter"))
-  ) %>% 
-  mutate(
-    total_quantity_per_1k = (total_quantity / population) * 1000
-    )
+  summarise(total_quantity = sum(paid_quantity, na.rm = TRUE), population = mean(hb_population, na.rm = TRUE)) %>% 
+    mutate(season = factor(season, levels = c("Spring", "Summer", "Autumn", "Winter"))) %>% 
+  mutate(total_quantity_per_1k = (total_quantity / population) * 1000)
 
 health_board_plot <- make_line_graph(
   seasonal_hb_totals,
@@ -315,7 +258,6 @@ health_board_plot <- make_line_graph(
   subtitle = "Prescriptions per 1,000 people",
   facet = TRUE
 )
-
 
 health_board_plot
 
@@ -327,9 +269,9 @@ To further analyse the potential correlation between seasons and prescribing of 
 
 These graphs allow for comparisons in the seasonal trends in prescriptions between health boards. Similarly to the trend shown in Figure 1, the majority of health boards see increases in prescriptions during the winter season.
 
-From this data we can see, similar to the previous graph showing total salbutamol prescriptions across Scotland, that the majority of health boards observe increases in prescriptions during the winter season. There are also high levels in spring for the Orkney, Shetland, Tayside and Western Isle health boards, possibly due to ongoing cold weather conditions.
+From this data we can see, similar to the previous graph showing total salbutamol prescriptions across Scotland, that the majority of health boards observe increases in prescriptions during the winter season. The greatest increase in winter prescriptions is seen in NHS Forth Valley. There are also high levels in spring for the Orkney, Shetland, Tayside and Western Isle health boards, possibly due to ongoing cold weather conditions.
 
-Fewer accessible GP's and Pharmacies could influence the number of prescriptions in NHS Western Isles and NHS Orkney. Worth noting is that NHS Shetland sees its lowest number of prescriptions in winter. With the available data, it is difficult to determine the cause of this observation. However, further studies could potentially investigate other influential factors to better understand this trend in NHS Shetland.
+Accessibility GP's and Pharmacies could influence the number of prescriptions in NHS Western Isles and NHS Orkney. Worth noting is that NHS Shetland sees its lowest number of prescriptions in winter. With the available data, it is difficult to determine the cause of this observation. However, further studies could potentially investigate other influential factors to better understand this trend in NHS Shetland.
 
 Overall, from the Scotland line graph and the Health Board Plots, there appears to be a correlation between seasons and salbutamol prescriptions, with increased prescriptions observed in winter. This aligns with our expectations as colder weather can worsen asthma symptoms, and increase the need for salbutamol inhalers.
 
@@ -345,29 +287,15 @@ salbutamol_inhaler_map_data <- NHS_healthboards %>%
             by = join_by(HBCode == hbt)) %>% 
   filter(!is.na(HBName)) %>% 
   group_by(HBName, season, hb_population) %>% 
-  summarise(
-    paid_quantity = sum(paid_quantity)
-    ) %>% 
-  mutate(
-    quantity_per_1k = (paid_quantity/hb_population)*1000
-    )
+  summarise(paid_quantity = sum(paid_quantity)) %>% 
+  mutate(quantity_per_1k = (paid_quantity/hb_population)*1000)
 
 map_salbutamol_inhaler_per_1k <- salbutamol_inhaler_map_data %>%
-  ggplot(
-    aes(
-      fill = quantity_per_1k
-      )
-    ) +
+  ggplot(aes(fill = quantity_per_1k)) +
   geom_sf(colour = "black", size = 0.1) +
   coord_sf(lims_method = "geometry_bbox") +
-  scale_fill_distiller(
-    palette = "Greens", 
-    direction = 1, name = "No. of Prescriptions per 1,000 people", 
-    labels = scales::comma_format()
-    ) +
-  labs(
-    title = "Salbutamol Inhaler Prescriptions by Health Board in 2024",
-    subtitle = "Prescriptions per 1,000 people") +
+  scale_fill_distiller(palette = "Greens", direction = 1, name = "No. of Prescriptions per 1,000 people", labels = scales::comma_format()) +
+  labs(title = "Salbutamol Inhaler Prescriptions by Health Board in 2024", subtitle = "Prescriptions per 1,000 people") +
   theme_void() +
   theme(plot.title = element_text(face = "bold", size = 16), plot.subtitle = element_text(size = 8))  
 
