@@ -91,12 +91,9 @@ We can find the population datasets by health board here:
 
 population_data <- read_csv(here( "data", "UV102a_age_health_board_census.csv"), skip = 10) %>% 
   # Last column renamed to match column names with the prescription dataset
-  rename(Spare = "...6",
-         hb_name = "Health Board Area 2019",
-         hb_population = Count) %>% 
+  rename(Spare = "...6", hb_name = "Health Board Area 2019", hb_population = Count) %>% 
   # Data filtered so that we get the population of the entire health board
-  filter(Age == "All people" & Sex == "All people") %>% 
-  # Only the relevant columns selected
+  filter(Age == "All people" & Sex == "All people") %>%
   select(hb_name, hb_population) %>% 
   # Health Board names changed so they match the prescription data
   mutate(hb_name = paste("NHS", hb_name))
@@ -228,9 +225,7 @@ scotland_plotly
 
 
 
-The above graph shows the prescriptions of salbutamol inhalers in Scotland throughout the 4 seasons (spring, summer, autumn and winter) in 2024. 
-
-There is a visible increase in the number of salbutamol inhaler prescriptions during the winter months compared to the other seasons. However, it would be useful to distinguish between the NHS Health Boards to determine whether this trend is seen across all regions of Scotland. 
+The above graph shows the prescriptions of salbutamol inhalers in Scotland throughout the 4 seasons (spring, summer, autumn and winter) in 2024. There is a visible increase in the number of salbutamol inhaler prescriptions during the winter months compared to the other seasons. However, it would be useful to distinguish between the NHS Health Boards to determine whether this trend is seen across all regions of Scotland. 
 
 
 
@@ -255,9 +250,7 @@ health_board_plot
 
 To further analyse the potential correlation between seasons and prescribing of salbutamol inhalers, the above graphs were produced. Each graph shows the trends in salbutamol inhaler prescriptions across the 4 seasons for each of the 14 health boards. 
 
-These graphs allow for comparisons in the seasonal trends in prescriptions between health boards. Similarly to the trend shown in Figure 1, the majority of health boards see increases in prescriptions during the winter season.
-
-From this data we can see, similar to the previous graph showing total salbutamol prescriptions across Scotland, that the majority of health boards observe increases in prescriptions during the winter season. The greatest increase in winter prescriptions is seen in NHS Forth Valley. There are also high levels in spring for the Orkney, Shetland, Tayside and Western Isle health boards, possibly due to ongoing cold weather conditions.
+These graphs allow for comparisons in the seasonal trends in prescriptions between health boards. Similarly to the trend shown in Figure 1, the majority of health boards see increases in prescriptions during the winter season. The greatest increase in winter prescriptions is seen in NHS Forth Valley. There are also high levels in spring for the Orkney, Shetland, Tayside and Western Isle health boards, possibly due to ongoing cold weather conditions.
 
 Accessibility to GP's and Pharmacies could influence the number of prescriptions in certain health boards. Worth noting is that NHS Shetland sees its lowest number of prescriptions in winter. With the available data, it is difficult to determine the cause of this observation. However, further studies could potentially investigate other influential factors to better understand this trend in NHS Shetland.
 
@@ -297,9 +290,7 @@ map_salbutamol_inhaler_per_1k
 
 This map shows the number of prescriptions of salbutamol inhalers in each health board in 2024 (not separated by season). There appears to be more salbutamol prescriptions in health boards closer to the south. This is surprising since residents in the colder, northern regions would be expected to have more asthmatic symptoms requiring more salbutamol inhalers(4).
 
-A potential explanation could be that more densely populated and industrial areas produce more air pollution which can trigger asthmatic symptoms, and in turn increase prescriptions of salbutamol.
-
-Variations in accessibility to healthcare and GPs between the northern and southern regions could also contribute to this trend, with potentially more efficient assessment, diagnosis and treatment available in southern regions. Scottish Index of Multiple Deprivation (SIMD) scores and socioeconomic status across health boards could also contribute to the observed trend.
+A potential explanation could be that more densely populated and industrial areas produce more air pollution which can trigger asthmatic symptoms, and in turn increase prescriptions of salbutamol. Variations in accessibility to healthcare and GPs between the northern and southern regions could also contribute to this trend, with potentially more efficient assessment, diagnosis and treatment available in southern regions. Scottish Index of Multiple Deprivation (SIMD) scores and socioeconomic status across health boards could also contribute to the observed trend.
 
 
 # Conclusions
