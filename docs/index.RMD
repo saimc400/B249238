@@ -286,7 +286,7 @@ scotland_plotly
 
 
 
-The above graph shows the prescriptions of salbutamol inhalers in Scotland throughout the 4 seasons (spring, summer, autumn and winter) in the year 2024. 
+The above graph shows the prescriptions of salbutamol inhalers in Scotland throughout the 4 seasons (spring, summer, autumn and winter) in 2024. 
 
 There is a clear increase in the number of salbutamol inhaler prescriptions during the winter months compared to the other seasons. However, it would be useful to distinguish between the NHS Health Boards to determine whether this trend is seen across all regions of Scotland. 
 
@@ -316,13 +316,8 @@ health_board_plot <- make_line_graph(
   facet = TRUE
 )
 
-health_board_plotly <- ggplotly(
-  health_board_plot,
-  tooltip = c("text")
-) %>% 
-  config(displayModeBar = FALSE)
 
-health_board_plotly
+health_board_plot
 
 ```
 
@@ -381,7 +376,7 @@ map_salbutamol_inhaler_per_1k
 ```
 
 
-This map shows the number of prescriptions of salbutamol inhalers in each health board in 2024 (not separated by season). There appears to be more salbutamol prescriptions in health boards closer to the south. This is surprising since residents in the colder, northern regions would be expected to have more asthmatic symptoms requiring more salbutamol inhalers.
+This map shows the number of prescriptions of salbutamol inhalers in each health board in 2024 (not separated by season). There appears to be more salbutamol prescriptions in health boards closer to the south. This is surprising since residents in the colder, northern regions would be expected to have more asthmatic symptoms requiring more salbutamol inhalers(4).
 
 A potential explanation could be that more densely populated and industrial areas produce more air pollution which can trigger asthmatic symptoms, and in turn increase prescriptions of salbutamol.
 
@@ -407,6 +402,6 @@ There are no datasets for asthma or COPD prevalence in the 'Public Health Scotla
 
 3.Weather in Scotland | Scotland.org [Internet]. Scotland. Available from: https://www.scotland.org/about-scotland/weather
 
-4.
+4.Met Office. UK regional climates [Internet]. Met Office. Met Office; 2019. Available from: https://www.metoffice.gov.uk/research/climate/maps-and-data/regional-climates/index
 
 5.Julius E, Backer V, Charlotte Suppli Ulrik. Socioeconomic status is associated with healthcare seeking behaviour and disease burden in young adults with asthma – A nationwide cohort study. 2022 Jan 1;19:147997312211172-147997312211172.
