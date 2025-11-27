@@ -189,7 +189,7 @@ make_line_graph <- function(df, title, subtitle = NULL, facet = FALSE) {
 
 ### Figure 1
 
-```{r, include=TRUE, fig.width=7}
+```{r, include=TRUE, fig.height=4}
 
 #Total population of Scotland calculated
 total_population_scotland <- population_data %>%
