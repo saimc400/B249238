@@ -95,7 +95,7 @@ population_data <- read_csv(here( "data", "UV102a_age_health_board_census.csv"),
 ```
 
 
-```{r}
+```{r, include=TRUE}
 
 #Two data files for 2024 prescriptions combined so data for all 12 months are in one dataset
 combined_data_2024 <- bind_rows(data_jan_jun_2024, data_jul_dec_2024) %>% 
@@ -112,7 +112,7 @@ combined_data_2024 <- bind_rows(data_jan_jun_2024, data_jul_dec_2024) %>%
 ```
 
 
-```{r}
+```{r, include=TRUE}
 
 #Salbutamol and brand names for salbutamol selected in the prescriptions dataset
 salbutamol_inhalers <- c("SALBUTAMOL", "AIROMIR", "ASMALAL", "SALAMOL", "SALBULIN", "VENTOLIN")
@@ -134,7 +134,7 @@ All of the data files were used to produce the following results consisting of a
 
 ### Table 1
 
-```{r}
+```{r, include=TRUE}
 
 #A summary table is created with health board name, health board population, total number of prescriptions in each health board, and number of prescriptions per 1,000 people in each health board
 salbutamol_inhaler_data_table <- salbutamol_inhaler_data %>%
@@ -160,7 +160,7 @@ There is a clear correlation between health board population and total number of
 
 ## Graphs
 
-```{r}
+```{r, include=TRUE}
 
 #Function for making line graphs (as 2 separate line graphs are reported) so ggplot code is not repeated
 make_line_graph <- function(df, title, subtitle = NULL, facet = FALSE) {
@@ -189,7 +189,7 @@ make_line_graph <- function(df, title, subtitle = NULL, facet = FALSE) {
 
 ### Figure 1
 
-```{r, include=TRUE, fig.height=4}
+```{r, include=TRUE}
 
 #Total population of Scotland calculated
 total_population_scotland <- population_data %>%
@@ -211,7 +211,8 @@ scotland_plot <- make_line_graph(salbutamol_prescriptions_2024, title = "Seasona
 
 #Plotly used to allow for data to be observed while hovering over graph
 scotland_plotly <- ggplotly(scotland_plot, tooltip = c("text")) %>% 
-  config(displayModeBar = FALSE) #The mode bar is not required and obstructed the title
+  config(displayModeBar = FALSE) %>%  #The mode bar is not required and obstructed the title
+  layout(width = 300, height = 300)
 scotland_plotly
 
 ```
@@ -258,7 +259,7 @@ Overall, from Figure 1 and Figure 2, there appears to be a correlation between s
 ## Map
 
 ### Figure 3
-```{r}
+```{r, include=TRUE}
 
 #Joins salbutamol inhaler data with NHS healthboards geographical data for making a map shwoing number of prescriptions per 1,000 people in each health board
 salbutamol_inhaler_map_data <- NHS_healthboards %>%
