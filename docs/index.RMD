@@ -1,5 +1,5 @@
 ---
-title: 'Seasonal Changes in Prescriptions of Salbutamol Inhalers'
+title: 'Seasonal Variations in Salbutamol Inhaler Prescriptions'
 author: "B249238"
 output:
   html_document:
@@ -26,69 +26,58 @@ library(tidyverse)
 library(janitor) # cleaning data
 library(gt) # tables
 library(here) # directory structure
-library(sf)
-library(plotly)
-library(scales)
+library(sf) #map
+library(plotly) #interactive plots
+library(scales) #formatting labels (used to add commas)
 
 ```
 
 
 # Introduction
 
-Salbutamol is a short-acting beta-agonist (SABA) which is most commonly prescribed to patients with asthma or COPD. This inhaler relaxes the smooth muscle and dilates the airway, reducing asthmatic symptoms(1). 
+Salbutamol is a short-acting beta-agonist (SABA) which is most commonly prescribed to patients with asthma or COPD. This inhaler relaxes the smooth muscle and dilates the airway, reducing asthmatic symptoms(1). It is important to understand the trends in prescriptions across seasons and health boards as it can help to better assess asthma control in patients, as well as identifying any potential health inequalities between health boards/regions. 
 
-The aim of this report was to investigate the changes in prescriptions of salbutamol inhalers in Scotland in the year 2024, with a focus on variations across the different seasons. 
+The aim of this report was to investigate the changes in prescriptions of salbutamol inhalers in Scotland in the year 2024, with a focus on variations across the different seasons and across the health boards. 
 
-It is important to understand the trends in prescriptions across seasons and health boards as it can help to better assess asthma control in patients, as well as identifying any potential health inequalities between health boards/regions.
+Since salbutamol inhalers are most commonly prescribed to patients with asthma or COPD, we would expect to see a greater number of prescriptions in the winter months as the colder air can worsen the respiratory symptoms of these conditions, and the spread of respiratory viruses can also cause breathing problems(2).
 
-Since salbutamol inhalers are most commonly prescribed to patients with asthma/COPD, we would expect to see a greater number of prescriptions in the winter months as the colder air can worsen the respiratory symptoms of these conditions, and the spread of respiratory viruses can also cause breathing problems(2).
-
-In accordance with seasonal weather in Scotland(3), the data from the 12 months was grouped into 4 season: Spring (March - May), Summer (June - August), Autumn (September - November) and Winter (December - February). In the figures of this report, to adjust for population as a potential confounding variable, the number of prescriptions are reported per 1,000 people.
+In accordance with seasonal weather in Scotland(3), the data from the 12 months was grouped into 4 season: Spring (March - May), Summer (June - August), Autumn (September - November) and Winter (December - February).
 
 Here are the sources of the data files used in this report:
 
 We can find the January - June 2024 prescriptions file and its specific data dictionary here:
 <https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community/resource/f0df380b-3f9b-4536-bb87-569e189b727a>
-
 ```{r, include=TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 
 data_jan_jun_2024 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/f0df380b-3f9b-4536-bb87-569e189b727a/download/hb_pitc2024_01_06-1.csv") %>% 
   clean_names()
 
 ```
-
 We can find the July - December 2024 prescriptions file and its specific data dictionary here:
 <https://www.opendata.nhs.scot/dataset/prescriptions-in-the-community/resource/f3b9f2e2-66c0-4310-9b8e-734781d2ed0a>
-
 ```{r, include=TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 
 data_jul_dec_2024 <- read_csv("https://www.opendata.nhs.scot/dataset/84393984-14e9-4b0d-a797-b288db64d088/resource/f3b9f2e2-66c0-4310-9b8e-734781d2ed0a/download/hb_pitc2024_07_12-1.csv") %>% 
   clean_names()
 
 ```
-
 We can find the Health Board names dataset and its specific data dictionary here:
 <https://www.opendata.nhs.scot/dataset/geography-codes-and-labels/resource/652ff726-e676-4a20-abda-435b98dd7bdc>
-
 ```{r, include=TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 
 HB_lookup <- read_csv("https://www.opendata.nhs.scot/dataset/9f942fdb-e59e-44f5-b534-d6e17229cc7b/resource/652ff726-e676-4a20-abda-435b98dd7bdc/download/hb14_hb19.csv") %>% 
   clean_names()
 
 ```
-
 We can find the NHS Health Boards geographical datasets here:
 <https://www.data.gov.uk/dataset/27d0fe5f-79bb-4116-aec9-a8e565ff756a/nhs-health-boards-scotland>
-
 ```{r, include=TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 
 NHS_healthboards <- st_read(here("data", "SG_NHS_HealthBoards_2019.shp"))
 
 ```
-
 We can find the population datasets by health board here:
 <https://statistics.ukdataservice.ac.uk/dataset/scotland-s-census-2022-uv102a-age-by-sex>
-
 ```{r, include=TRUE, message = FALSE, warning = FALSE, results = 'hide'}
 
 population_data <- read_csv(here( "data", "UV102a_age_health_board_census.csv"), skip = 10) %>% 
@@ -113,11 +102,12 @@ combined_data_2024 <- bind_rows(data_jan_jun_2024, data_jul_dec_2024) %>%
   clean_names() %>% 
   full_join(HB_lookup, by = c("hbt" = "hb")) %>%
   select(hb_name, hbt:paid_date_month) %>% 
+  #Data filtered to only include rows where health board name is available (therefore excluding 'SB0806' as this is ambulance data, not health board data)
   filter(!is.na(hb_name)) %>%
   #Dataset joined with population data for calculating prescriptions per 1,000 people
   full_join(population_data, 
             by = join_by(hb_name)) %>% 
-  #Season column created with the four seasons
+  #Season column created with the months data grouped into four seasons
   mutate(season = case_when(
     paid_date_month %in% c(202403, 202404, 202405) ~ "Spring", 
     paid_date_month %in% c(202406, 202407, 202408) ~ "Summer", 
@@ -151,6 +141,8 @@ All of the data files were used to produce the following results consisting of a
 
 ```{r}
 
+#A summary table is created with health board name, health board population, total number of prescriptions in each health board, and number of prescriptions per 1,000 people in each health board
+
 salbutamol_inhaler_data_table <- salbutamol_inhaler_data %>%
   group_by(hb_name, hb_population) %>% 
   summarise(total_quantity = sum(paid_quantity), quantity_per_1k = (sum(paid_quantity)/mean(hb_population))*1000) %>% 
@@ -159,6 +151,7 @@ salbutamol_inhaler_data_table <- salbutamol_inhaler_data %>%
   tab_header(title = "Prescription of Salbutamol Inhalers across NHS Health Boards in 2024") %>% 
   tab_source_note(source_note = "Source: 2024 Prescription datasets from the NHS OpenData sources, Health Board Population data from  Scotland's Census Data in UK Data Service source") %>% 
   cols_label(hb_name = "Health Board", hb_population = "Health Board Population", total_quantity = "Total Prescriptions", quantity_per_1k = "Salbutamol Inhaler Prescriptions Per 1,000 people") %>% 
+  #The line below removes decimal points from the stated columns
   fmt_number(columns = c(hb_population, total_quantity, quantity_per_1k), decimals = 0) %>% 
   opt_stylize()
 salbutamol_inhaler_data_table
@@ -166,25 +159,31 @@ salbutamol_inhaler_data_table
 ```
 
 
-This table summarises the total number of salbutamol inhalers prescribed across each health board in 2024, as well as the corresponding number per 1,000 people.
+This table summarises the total number of salbutamol inhalers prescribed across each health board in 2024, as well as the corresponding number per 1,000 people. 
+
+There is a clear correlation between health board population and total number of prescriptions. Therefore, to adjust for population as a potential confounding variable, the number of prescriptions are reported per 1,000 people in the following figures.
 
 
 ## Graphs
 
 ```{r}
 
-#Function for making line graphs (as 2 separate line graphs are reported)
+#Function for making line graphs (as 2 separate line graphs are reported) so ggplot code is not repeated
+
 make_line_graph <- function(df, title, subtitle = NULL, facet = FALSE) {
   seasonal_plot <- ggplot(
     df,
     aes(x = season, y = total_quantity_per_1k, group = if (facet) hb_name else 1,
-      #Text shown when hovering over line graph (using plotly)
+      #Text shown when hovering over Figure 1 (using plotly)
       text = paste(
       "Season: ", season, "<br>",
-      "Total Prescriptions per 1,000: ", scales::comma(total_quantity_per_1k, accuracy = 1))))+  #Includes a comma and no decimal points in prescriptions per 1,000 people +
+      "Total Prescriptions per 1,000: ",
+      #The line below includes a comma and no decimal points in prescriptions per 1,000 people
+      scales::comma(total_quantity_per_1k, accuracy = 1))))+
     geom_line(color = "green", linewidth = 1) +
     geom_point() +
     labs(x = "Season", y = "Total Salbutamol Inhaler Prescriptions per 1,000 people", title = title, subtitle = subtitle) +
+    #The line below creates limits in the y-axis values so number of prescriptions can be compared between health boards in Figure 2 as opposed to just trends being compared
     scale_y_continuous(limits = c(16000, 36000)) +
     theme_bw() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -220,7 +219,8 @@ seasonal_totals <- salbutamol_inhaler_data %>%
 salbutamol_prescriptions_2024 <- seasonal_totals %>%
   mutate(total_quantity_per_1k = (total_quantity / total_population_scotland) * 1000)
 
-#Plot of Scotland prescription data
+#Uses prior function to make plot of Scotland prescription data
+
 scotland_plot <- make_line_graph(salbutamol_prescriptions_2024, title = "Seasonal Salbutamol Prescriptions per 1,000 people in 2024")
 
 #Plotly used to allow for data to be observed while hovering over graph
@@ -228,7 +228,7 @@ scotland_plotly <- ggplotly(
   scotland_plot,
   tooltip = c("text")
 ) %>% 
-  config(displayModeBar = FALSE)
+  config(displayModeBar = FALSE) #The mode bar is not required and obstructed the title
 
 scotland_plotly
 
@@ -238,20 +238,22 @@ scotland_plotly
 
 The above graph shows the prescriptions of salbutamol inhalers in Scotland throughout the 4 seasons (spring, summer, autumn and winter) in 2024. 
 
-There is a clear increase in the number of salbutamol inhaler prescriptions during the winter months compared to the other seasons. However, it would be useful to distinguish between the NHS Health Boards to determine whether this trend is seen across all regions of Scotland. 
+There is a visible increase in the number of salbutamol inhaler prescriptions during the winter months compared to the other seasons. However, it would be useful to distinguish between the NHS Health Boards to determine whether this trend is seen across all regions of Scotland. 
 
 
 
 ### Figure 2
 
-```{r, include=TRUE, fig.width=10, fig.height=20}
+```{r, include=TRUE, fig.width=10, fig.height=15}
 
+#calculates total number of prescriptions per 1,000 people for each health board to allow for faceted graphs to be produced
 seasonal_hb_totals <- salbutamol_inhaler_data %>%
   group_by(hb_name, season) %>% 
   summarise(total_quantity = sum(paid_quantity, na.rm = TRUE), population = mean(hb_population, na.rm = TRUE)) %>% 
     mutate(season = factor(season, levels = c("Spring", "Summer", "Autumn", "Winter"))) %>% 
   mutate(total_quantity_per_1k = (total_quantity / population) * 1000)
 
+#Uses prior function to make faceted graphs
 health_board_plot <- make_line_graph(
   seasonal_hb_totals,
   title = "Seasonal Salbutamol Prescriptions by Health Board",
@@ -271,9 +273,9 @@ These graphs allow for comparisons in the seasonal trends in prescriptions betwe
 
 From this data we can see, similar to the previous graph showing total salbutamol prescriptions across Scotland, that the majority of health boards observe increases in prescriptions during the winter season. The greatest increase in winter prescriptions is seen in NHS Forth Valley. There are also high levels in spring for the Orkney, Shetland, Tayside and Western Isle health boards, possibly due to ongoing cold weather conditions.
 
-Accessibility GP's and Pharmacies could influence the number of prescriptions in NHS Western Isles and NHS Orkney. Worth noting is that NHS Shetland sees its lowest number of prescriptions in winter. With the available data, it is difficult to determine the cause of this observation. However, further studies could potentially investigate other influential factors to better understand this trend in NHS Shetland.
+Accessibility to GP's and Pharmacies could influence the number of prescriptions in certain health boards. Worth noting is that NHS Shetland sees its lowest number of prescriptions in winter. With the available data, it is difficult to determine the cause of this observation. However, further studies could potentially investigate other influential factors to better understand this trend in NHS Shetland.
 
-Overall, from the Scotland line graph and the Health Board Plots, there appears to be a correlation between seasons and salbutamol prescriptions, with increased prescriptions observed in winter. This aligns with our expectations as colder weather can worsen asthma symptoms, and increase the need for salbutamol inhalers.
+Overall, from Figure 1 and Figure 2, there appears to be a correlation between seasons and salbutamol prescriptions, with increased prescriptions observed in winter. This aligns with our expectations as colder weather can worsen asthma symptoms, and increase the need for salbutamol inhalers.
 
 
 
@@ -282,6 +284,7 @@ Overall, from the Scotland line graph and the Health Board Plots, there appears 
 ### Figure 3
 ```{r}
 
+#Joins salbutamol inhaler data with NHS healthboards geographical data for making a map shwoing number of prescriptions per 1,000 people in each health board
 salbutamol_inhaler_map_data <- NHS_healthboards %>%
   full_join(salbutamol_inhaler_data, 
             by = join_by(HBCode == hbt)) %>% 
@@ -290,11 +293,13 @@ salbutamol_inhaler_map_data <- NHS_healthboards %>%
   summarise(paid_quantity = sum(paid_quantity)) %>% 
   mutate(quantity_per_1k = (paid_quantity/hb_population)*1000)
 
+#Makes a visual map showing number of prescriptions per 1,000 people in each health board
 map_salbutamol_inhaler_per_1k <- salbutamol_inhaler_map_data %>%
   ggplot(aes(fill = quantity_per_1k)) +
   geom_sf(colour = "black", size = 0.1) +
   coord_sf(lims_method = "geometry_bbox") +
   scale_fill_distiller(palette = "Greens", direction = 1, name = "No. of Prescriptions per 1,000 people", labels = scales::comma_format()) +
+  #The above line includes commas in the no. of prescriptions per 1,000 people on the right hand side, making it look nicer
   labs(title = "Salbutamol Inhaler Prescriptions by Health Board in 2024", subtitle = "Prescriptions per 1,000 people") +
   theme_void() +
   theme(plot.title = element_text(face = "bold", size = 16), plot.subtitle = element_text(size = 8))  
@@ -314,9 +319,9 @@ Variations in accessibility to healthcare and GPs between the northern and south
 # Conclusions
 
 
-From the data presented in this report, there is a clear correlation between seasons and salbutamol inhaler prescriptions in Scotland as a whole, with increased prescriptions during the winter season. This trend was seen across the NHS health boards, with NHS Orkney and NHS Tayside showing a similar raised level in Spring as well. The exception to this trend was seen in NHS Shetland and NHS Western Isles, where the greatest number of prescriptions was during Spring. While it is difficult to explain why this is the case with the above data, it is possibly due to the effect of some confounding variables. For example, socioeconomic status in different regions and health boards may affect patient accessibility to prescriptions and inhalers(5). Additionally, only data for 2024 was included. These limitations would need to be investigated to arrive to a definitive conclusion regarding the cause of the seasonal variation within and between health boards.
+From the data presented in this report, there is a clear correlation between seasons and salbutamol inhaler prescriptions in Scotland as a whole, with increased prescriptions during the winter season. This trend was seen across the NHS health boards, with exceptions in NHS Shetland and NHS Western Isles, where the number of prescriptions decreased in winter months. While it is difficult to explain why this is the case with the above data, it is possibly due to the effect of some confounding variables. For example, socioeconomic status and SIMD scores in different health boards may affect patient accessibility to prescriptions and inhalers(5). Additionally, only data for 2024 was included. 
 
-Regarding potential next steps, it would be useful to research further into seasonal trends throughout other years, as well as other influencing factors. This report mainly focused on seasonal changes in prescriptions. To further investigate the changes across health boards, we could look at the SIMD scores to understand if the socioeconomic status influences salbutamol prescriptions.
+The map yielded surprising results with residnets in warmer regions needing more inhalers as opposed to in colder climates further north. Regarding potential next steps, further investigations could look at the SIMD scores to understand if the socioeconomic status influences salbutamol prescriptions. It might also be useful to research further into seasonal trends throughout other years, as well as other influencing factors. 
 
 There are no datasets for asthma or COPD prevalence in the 'Public Health Scotland' website (<https://www.opendata.nhs.scot/>). If such data were to become available, the seasonal influences in prescriptions could be further investigated for these conditions. Since salbutamol inhalers are primarily prescribed for asthma and COPD, it would be useful to investigate whether seasonal changes affect the number of prescriptions for one condition more than the other.  
 
