@@ -188,7 +188,7 @@ make_line_graph <- function(df, title, subtitle = NULL, facet = FALSE) {
 
   #Code needed for Figure 2 where graphs are faceted by health board
   if (facet) {seasonal_plot <- seasonal_plot + 
-      facet_wrap(~ hb_name, ncol = 4, scales = "free")}
+      facet_wrap(~ hb_name, ncol = 3, scales = "free")}
   return(seasonal_plot)
   }
 
@@ -221,7 +221,7 @@ scotland_plot <- make_line_graph(salbutamol_prescriptions_2024, title = "Seasona
 #Plotly used to allow for data to be observed while hovering over graph
 scotland_plotly <- ggplotly(scotland_plot, tooltip = c("text")) %>% 
   config(displayModeBar = FALSE) %>%  #The mode bar is not required and obstructed the title
-  layout(width = 500, height = 400)
+  layout(width = 600, height = 400)
 scotland_plotly
 
 ```
